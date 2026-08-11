@@ -71,6 +71,18 @@ export function Logo() {
 - `figma-design-to-code` 스킬 규칙에 따라 `get_design_context`로 디자인 컨텍스트를 가져온 뒤 프로젝트 스택(FSD, styled-components)에 맞게 변환합니다.
 - 예외: provider/쿼리 클라이언트 설정처럼 디자인 대응물이 없는 비-시각적 스캐폴딩 작업.
 
+## 디자인 토큰: Figma Variables가 원본
+
+색상 등의 디자인 토큰은 Figma Variables가 네이밍 원본입니다. 전체 팔레트를 미리 만들지 않고, 컴포넌트 작업 때 필요한 토큰만 그때그때 추가합니다 (FSD `shared` 승격 원칙과 같은 철학).
+
+**Figma에 변수로 등록되어 있지 않은 색상을 발견하면, 임의로 판단하지 말고 반드시 사용자에게 물어봅니다.** `get_variable_defs`가 돌려주지 않은 raw hex가 디자인에 있으면:
+
+1. 어떤 색이 어디에 쓰이는지 정리해서 사용자에게 보고합니다.
+2. 변수로 승격할지 / 해당 컴포넌트 안에 raw hex로 둘지를 **사용자가 정합니다**.
+3. 승격하기로 했다면 토큰 이름도 함께 확인한 뒤, Figma `Color` 컬렉션에 변수를 만들고 해당 노드에 바인딩한 다음 `theme.ts`에 반영합니다.
+
+Figma 변수 생성 시 기존 컨벤션을 따릅니다 — 이름은 `Group/Name`(예: `Primary/Blue`), `scopes`는 실제 쓰임에 맞게 명시(`ALL_SCOPES` 금지), `codeSyntax.WEB`은 `createTheme`이 만드는 CSS 변수명(`var(--sc-colors-<group>-<name>)`)과 일치시킵니다.
+
 ## TanStack Query: 쿼리 팩토리 패턴
 
 원시 쿼리 키/옵션을 컴포넌트 곳곳에 흩어놓지 않습니다. 데이터를 조회하는 각 entity/feature는 해당 슬라이스의 `api/` 폴더에 위치한 **쿼리 팩토리**를 정의하여 다음을 중앙화합니다:
