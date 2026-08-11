@@ -29,6 +29,40 @@ shared/    — 비즈니스 로직과 무관한 재사용 코드 (UI 킷, 라이
 - 이 프로젝트는 Next.js를 사용하므로, Next.js App Router가 사용하는 `app/` 디렉토리(라우팅)와 FSD의 `app` 레이어(전역 설정/provider)는 서로 다른 개념입니다 — Next의 라우팅 파일은 최대한 얇게 유지하고, 실제 페이지 조합은 라우트 파일에서 import하는 FSD `pages`(또는 `views`) 슬라이스에 위임하세요.
 - **`shared`로의 섣부른 승격 금지**: 특정 위젯/페이지에서만 쓰이는 컴포넌트(예: 사이드바 전용 `NavLink`, `MenuItem`)는 재사용 가능성이 있어 보여도 처음에는 해당 슬라이스 내부(`widgets/sidebar/ui/`)에 둡니다. 실제로 두 번째 소비자가 생겼을 때 그 시점에 `shared/ui`로 끌어올리세요. `shared`는 "실제로 여러 슬라이스에서 재사용 중인" 코드를 위한 곳이지, "나중에 재사용될 수도 있는" 코드를 미리 두는 곳이 아닙니다.
 
+## styled-components: 스타일 파일 분리 컨벤션
+
+일반 컴포넌트와 styled-components를 한 파일에서 섞어 쓰지 않습니다. 컴포넌트별로 스타일 정의 파일을 분리하고 `S.` 네임스페이스로 import해서 사용합니다:
+
+```
+shared/ui/logo/
+  Logo.tsx          — 로직/마크업만
+  Logo.styles.ts    — styled-components 정의만
+  index.ts
+```
+
+```ts
+// Logo.styles.ts
+import styled from "styled-components";
+
+export const LogoText = styled.p`...`;
+export const Dash = styled.span`...`;
+```
+
+```tsx
+// Logo.tsx
+import * as S from "./Logo.styles";
+
+export function Logo() {
+  return (
+    <S.LogoText>
+      <S.Dash>Dash</S.Dash>
+    </S.LogoText>
+  );
+}
+```
+
+이렇게 하면 마크업만 봐도 어떤 요소가 스타일드 컴포넌트인지(`S.`) 바로 구분되고, 스타일 변경 시 해당 컴포넌트의 로직 파일을 건드릴 필요가 없습니다.
+
 ## UI 개발 워크플로우: Figma 기반
 
 모든 UI 컴포넌트는 Figma 디자인(DashStack 어드민 대시보드 UI 킷)을 기준으로 구현합니다. 마크업/스타일/색상/타이포그래피를 임의로 추측해서 만들지 않습니다.
@@ -49,14 +83,14 @@ shared/    — 비즈니스 로직과 무관한 재사용 코드 (UI 킷, 라이
 ```ts
 // entities/user/api/queries.ts
 export const userQueries = {
-  all: () => ['users'] as const,
-  lists: () => [...userQueries.all(), 'list'] as const,
+  all: () => ["users"] as const,
+  lists: () => [...userQueries.all(), "list"] as const,
   list: (filters: UserFilters) =>
     queryOptions({
       queryKey: [...userQueries.lists(), filters],
       queryFn: () => fetchUsers(filters),
     }),
-  details: () => [...userQueries.all(), 'detail'] as const,
+  details: () => [...userQueries.all(), "detail"] as const,
   detail: (id: string) =>
     queryOptions({
       queryKey: [...userQueries.details(), id],
@@ -94,3 +128,13 @@ gh pr create -B develop --title "<제목>" --body-file <파일>
 
 - 본문은 `.github/pull_request_template.md`를 채워서 `--body-file`로 전달합니다 (CLI 생성 시 템플릿이 자동 적용되지 않음).
 - origin이 다중 계정용 SSH 별칭(`git@my-github.com:...`)을 쓰지만, `gh`가 `~/.ssh/config`의 Host 별칭을 해석하므로 `-R` 없이 그대로 동작합니다.
+
+## Obsidian 기록 자동화
+
+이 프로젝트의 작업 기록은 Obsidian 볼트의 `10_Projects/admin-dashboard/`에 남깁니다. 사용자가 "정리해줘"라고 요청하지 않아도, 아래 상황이 발생하면 먼저 나서서 해당 파일에 기록합니다.
+
+- **`작업일지/YYYY-MM-DD.md`**: 그날의 논의·결정을 시간순으로 append. 결정이 확정되는 시점마다 즉시 기록하고, 하루 끝에 몰아서 정리하지 않습니다 (여러 결정이 섞이면 "왜 그렇게 정했는지" 맥락이 손실되기 때문).
+- **`개요.md`**: 프로젝트의 현재 스냅샷. 새로운 사실을 append하지 않고 항상 최신 상태로 덮어씁니다 — 목적/범위, 기술 스택 요약, 현재 진행 상황, 지금까지 확정된 주요 결정 요약, 관련 링크. 진행 상황이나 확정된 결정이 바뀔 때마다 해당 섹션을 갱신합니다.
+- **`이슈트래킹.md`**: 에러를 진단하고 해결했을 때 기록. 형식은 증상 → 진단 과정 → 해결 → 교훈/앞으로 적용할 규칙. 사소한 오타 수정이 아니라, 원인 파악에 시간이 든 실질적인 버그일 때 기록합니다.
+
+세 파일 모두 서로 링크(`[[파일명#섹션]]`)로 연결해서 참조합니다.
