@@ -14,6 +14,15 @@ export const theme = createTheme({
     text: {
       primary: "#202224",
     },
+    /**
+     * 값 이름 기반 토큰이라 Figma에서도 Light/Dark 모드 값이 동일하다.
+     * (다크모드에서 배경/테두리를 바꿔야 하면 역할 기반 토큰을 따로 만든다)
+     */
+    neutral: {
+      white: "#ffffff",
+      gray100: "#e8e8e8",
+      gray200: "#e0e0e0",
+    },
   },
 });
 
