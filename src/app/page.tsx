@@ -1,5 +1,5 @@
-import { Logo } from "@/shared/ui/logo";
+import { Sidebar } from "@/widgets/sidebar";
 
 export default function Home() {
-  return <Logo />;
+  return <Sidebar />;
 }
