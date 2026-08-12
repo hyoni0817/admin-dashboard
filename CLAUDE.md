@@ -78,3 +78,15 @@ export const userQueries = {
 - 장기 브랜치: `release`, `develop`
 - 작업 브랜치: `feat/*` (신규 기능), `fix/*` (버그 수정) — 예: `feat/pr-template`
 - PR은 `feat/*` / `fix/*` 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
+
+### `gh` CLI로 PR 생성하기
+
+저장소 기본 브랜치가 `release`라서 `gh pr create`는 base를 `release`로 잡습니다. 컨벤션에 맞추려면 **base를 `-B develop`으로 반드시 명시**해야 합니다.
+
+```bash
+git push -u origin <현재-브랜치>
+gh pr create -B develop --title "<제목>" --body-file <파일>
+```
+
+- 본문은 `.github/pull_request_template.md`를 채워서 `--body-file`로 전달합니다 (CLI 생성 시 템플릿이 자동 적용되지 않음).
+- origin이 다중 계정용 SSH 별칭(`git@my-github.com:...`)을 쓰지만, `gh`가 `~/.ssh/config`의 Host 별칭을 해석하므로 `-R` 없이 그대로 동작합니다.
