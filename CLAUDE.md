@@ -76,5 +76,5 @@ export const userQueries = {
 ## 브랜치 및 PR 전략
 
 - 장기 브랜치: `release`, `develop`
-- 작업 브랜치: `feat-*` (신규 기능), `fix-*` (버그 수정)
-- PR은 `feat-*` / `fix-*` 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
+- 작업 브랜치: `feat/*` (신규 기능), `fix/*` (버그 수정) — 예: `feat/pr-template`
+- PR은 `feat/*` / `fix/*` 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
