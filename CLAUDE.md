@@ -123,6 +123,17 @@ export const userQueries = {
 
 자주 쓰는 type: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`. 예시: `feat(user): 사용자 목록 필터링 기능 추가`
 
+### 머지 커밋
+
+`develop` → `release` 릴리스 머지는 `chore(release): <한국어 설명>` 형식을 씁니다. 머지 커밋 자체는 새 기능을 넣지 않고(기능 정보는 안에 든 `feat(...)` 커밋들이 이미 가지고 있음) 묶음을 옮기는 작업이라 `chore`입니다.
+
+```bash
+git checkout release
+git merge --no-ff develop -m "chore(release): 사이드바 위젯 릴리스"
+```
+
+`--no-ff`로 머지 커밋을 반드시 남깁니다 — 릴리스 지점이 히스토리에 표시되고(`git log --first-parent release`), 문제가 생기면 `git revert -m 1 <머지커밋>`으로 릴리스를 통째로 되돌릴 수 있기 때문입니다.
+
 ## 브랜치 및 PR 전략
 
 - 장기 브랜치: `release`, `develop`
