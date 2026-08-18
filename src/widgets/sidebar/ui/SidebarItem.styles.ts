@@ -2,6 +2,14 @@ import Link from "next/link";
 import styled, { css } from "styled-components";
 import { theme } from "@/shared/config/theme";
 
+/** active 바와 hover 배경이 공유하는 형태 — 좌우 24px(=10%) 안쪽으로 들어온 라운드 6px 바. */
+const barShape = css`
+  content: "";
+  position: absolute;
+  inset: 0 24px;
+  border-radius: 6px;
+`;
+
 /**
  * Figma "Navigation / Sidebar Item (Light)" — 240x50.
  * 아이콘은 x=46(22px), 라벨은 x=78에서 시작하므로 padding-left 46px + gap 10px으로 맞춘다.
@@ -22,17 +30,21 @@ export const Item = styled(Link)<{ $active: boolean }>`
   letter-spacing: 0.3px;
   color: ${theme.colors.text.primary};
 
+  /* hover 배경. active일 때는 파란 바가 이미 자리를 차지하므로 적용하지 않는다 */
+  &:hover::before {
+    ${barShape}
+    background: ${theme.colors.neutral.gray50};
+  }
+
   ${({ $active }) =>
     $active &&
     css`
       color: ${theme.colors.neutral.white};
 
-      /* 본체: 좌우 24px(=10%) 안쪽으로 들어온 라운드 6px 바 */
-      &::before {
-        content: "";
-        position: absolute;
-        inset: 0 24px;
-        border-radius: 6px;
+      /* 본체 */
+      &::before,
+      &:hover::before {
+        ${barShape}
         background: ${theme.colors.primary.blue};
       }
 
