@@ -20,6 +20,7 @@ export const theme = createTheme({
      */
     neutral: {
       white: "#ffffff",
+      gray50: "#f5f5f5",
       gray100: "#e8e8e8",
       gray200: "#e0e0e0",
     },
