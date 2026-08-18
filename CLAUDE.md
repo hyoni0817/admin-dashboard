@@ -141,6 +141,26 @@ gh pr create -B develop --title "<제목>" --body-file <파일>
 - 본문은 `.github/pull_request_template.md`를 채워서 `--body-file`로 전달합니다 (CLI 생성 시 템플릿이 자동 적용되지 않음).
 - origin이 다중 계정용 SSH 별칭(`git@my-github.com:...`)을 쓰지만, `gh`가 `~/.ssh/config`의 Host 별칭을 해석하므로 `-R` 없이 그대로 동작합니다.
 
+### rebase와 merge 중 무엇을 쓸 것인가
+
+원칙: **아직 공유하지 않은 커밋은 rebase, 이미 공유된 히스토리는 merge.** rebase는 커밋을 새로 만들어 갈아끼우므로(해시가 바뀜) "내 것"에만 씁니다.
+
+| 상황 | 방식 |
+| --- | --- |
+| `feat/*`·`fix/*`에 `develop` 최신 내용 가져오기 | **rebase** (`git rebase develop`) |
+| PR 올리기 전 커밋 정리 | **rebase -i** |
+| `feat/*`·`fix/*` → `develop` PR 머지 | **rebase merge** |
+| `develop` → `release` | **merge** |
+
+**두 방식을 섞지 않습니다.** 작업 브랜치에서 `git merge develop`으로 최신 내용을 가져오면, 나중에 rebase 머지를 할 때 GitHub이 그 머지 커밋을 버리면서 **머지가 해결해둔 충돌이 되살아납니다.** rebase로 머지할 계획이면 가져올 때도 rebase로 가져오세요. (실제 사례: [[이슈트래킹#rebase 머지 시 되살아난 CLAUDE.md 충돌]])
+
+기타 규칙:
+
+- `develop`·`release`는 여러 곳에서 공유되는 히스토리이므로 **절대 rebase하지 않습니다.**
+- 혼자 쓰는 작업 브랜치는 자유롭게 rebase해도 안전합니다. rebase 후에는 `git push --force-with-lease`를 씁니다 (`--force`가 아니라 — 원격이 그사이 바뀌었으면 거부해 줍니다).
+- 되돌릴 수 있도록 rebase 전에 백업 브랜치(`git branch backup/<이름>`)를 만들고, 끝난 뒤 `git diff --stat backup/<이름> HEAD`로 내용이 보존됐는지 확인합니다.
+- `git pull`은 상황에 따라 원치 않는 머지 커밋을 만듭니다. 확인만 할 때는 `git fetch`를 쓰고, 합칠 때는 `git pull --ff-only`를 씁니다.
+
 ## Obsidian 기록 자동화
 
 이 프로젝트의 작업 기록은 Obsidian 볼트의 `10_Projects/admin-dashboard/`에 남깁니다. 사용자가 "정리해줘"라고 요청하지 않아도, 아래 상황이 발생하면 먼저 나서서 해당 파일에 기록합니다.
