@@ -170,7 +170,8 @@ gh pr create -B develop --title "<제목>" --body-file <파일>
 - `develop`·`release`는 여러 곳에서 공유되는 히스토리이므로 **절대 rebase하지 않습니다.**
 - 혼자 쓰는 작업 브랜치는 자유롭게 rebase해도 안전합니다. rebase 후에는 `git push --force-with-lease`를 씁니다 (`--force`가 아니라 — 원격이 그사이 바뀌었으면 거부해 줍니다).
 - 되돌릴 수 있도록 rebase 전에 백업 브랜치(`git branch backup/<이름>`)를 만들고, 끝난 뒤 `git diff --stat backup/<이름> HEAD`로 내용이 보존됐는지 확인합니다.
-- `git pull`은 상황에 따라 원치 않는 머지 커밋을 만듭니다. 확인만 할 때는 `git fetch`를 쓰고, 합칠 때는 `git pull --ff-only`를 씁니다.
+- `git pull`은 상황에 따라 원치 않는 머지 커밋을 만듭니다. 확인만 할 때는 `git fetch`를 쓰고, 합칠 때는 `git pull --ff-only`를 씁니다. 이 저장소에는 `pull.ff=only`가 **로컬 설정으로** 걸려 있어 `git pull`만 해도 동일하게 동작합니다 (전역 설정이 아니므로 다른 저장소에서는 `--ff-only`를 직접 붙여야 합니다).
+- **`rerere`는 쓰지 않습니다.** 예전 충돌 해결을 기억했다가 자동 적용해 주는 기능이지만, 그 해결이 지금 맥락에도 맞는지는 git이 판단하지 못합니다. 특히 문서처럼 같은 위치가 반복해서 부딪히는 파일에서 위험합니다. 번거롭더라도 충돌은 매번 직접 확인하고 해결합니다.
 
 ## Obsidian 기록 자동화
 
