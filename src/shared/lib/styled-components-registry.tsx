@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { useServerInsertedHTML } from "next/navigation";
-import { ServerStyleSheet, StyleSheetManager } from "styled-components";
+import {
+  ServerStyleSheet,
+  StyleSheetManager,
+  ThemeProvider,
+} from "styled-components";
+import { DarkOverrides, theme } from "../config/theme";
 
 export function StyledComponentsRegistry({
   children,
@@ -21,7 +26,11 @@ export function StyledComponentsRegistry({
 
   return (
     <StyleSheetManager sheet={styledComponentsStyleSheet.instance}>
-      {children}
+      <ThemeProvider theme={theme.raw}>
+        {children}
+        <theme.GlobalStyle />
+        <DarkOverrides />
+      </ThemeProvider>
     </StyleSheetManager>
   );
 }

@@ -2,10 +2,6 @@
 
 이 파일은 이 저장소에서 작업할 때 Claude Code(claude.ai/code)에게 제공되는 가이드입니다.
 
-## 프로젝트 현황
-
-이 저장소는 아직 스캐폴딩되지 않았습니다 — 코드와 `package.json`이 없습니다. 아래 규칙들은 프로젝트가 생성된 이후 따라야 할 스택과 아키텍처를 미리 정의한 것으로, 스캐폴딩 시점부터 이후의 모든 작업이 이 결정들과 일관되게 유지되도록 하기 위함입니다.
-
 ## 기술 스택
 
 - **Next.js** + **React** + **TypeScript**
@@ -33,6 +29,60 @@ shared/    — 비즈니스 로직과 무관한 재사용 코드 (UI 킷, 라이
 - 이 프로젝트는 Next.js를 사용하므로, Next.js App Router가 사용하는 `app/` 디렉토리(라우팅)와 FSD의 `app` 레이어(전역 설정/provider)는 서로 다른 개념입니다 — Next의 라우팅 파일은 최대한 얇게 유지하고, 실제 페이지 조합은 라우트 파일에서 import하는 FSD `pages`(또는 `views`) 슬라이스에 위임하세요.
 - **`shared`로의 섣부른 승격 금지**: 특정 위젯/페이지에서만 쓰이는 컴포넌트(예: 사이드바 전용 `NavLink`, `MenuItem`)는 재사용 가능성이 있어 보여도 처음에는 해당 슬라이스 내부(`widgets/sidebar/ui/`)에 둡니다. 실제로 두 번째 소비자가 생겼을 때 그 시점에 `shared/ui`로 끌어올리세요. `shared`는 "실제로 여러 슬라이스에서 재사용 중인" 코드를 위한 곳이지, "나중에 재사용될 수도 있는" 코드를 미리 두는 곳이 아닙니다.
 
+## styled-components: 스타일 파일 분리 컨벤션
+
+일반 컴포넌트와 styled-components를 한 파일에서 섞어 쓰지 않습니다. 컴포넌트별로 스타일 정의 파일을 분리하고 `S.` 네임스페이스로 import해서 사용합니다:
+
+```
+shared/ui/logo/
+  Logo.tsx          — 로직/마크업만
+  Logo.styles.ts    — styled-components 정의만
+  index.ts
+```
+
+```ts
+// Logo.styles.ts
+import styled from "styled-components";
+
+export const LogoText = styled.p`...`;
+export const Dash = styled.span`...`;
+```
+
+```tsx
+// Logo.tsx
+import * as S from "./Logo.styles";
+
+export function Logo() {
+  return (
+    <S.LogoText>
+      <S.Dash>Dash</S.Dash>
+    </S.LogoText>
+  );
+}
+```
+
+이렇게 하면 마크업만 봐도 어떤 요소가 스타일드 컴포넌트인지(`S.`) 바로 구분되고, 스타일 변경 시 해당 컴포넌트의 로직 파일을 건드릴 필요가 없습니다.
+
+## UI 개발 워크플로우: Figma 기반
+
+모든 UI 컴포넌트는 Figma 디자인(DashStack 어드민 대시보드 UI 킷)을 기준으로 구현합니다. 마크업/스타일/색상/타이포그래피를 임의로 추측해서 만들지 않습니다.
+
+- 새 UI 컴포넌트를 만들기 전, 해당 요소의 Figma 노드 URL을 사용자에게 확인합니다.
+- `figma-design-to-code` 스킬 규칙에 따라 `get_design_context`로 디자인 컨텍스트를 가져온 뒤 프로젝트 스택(FSD, styled-components)에 맞게 변환합니다.
+- 예외: provider/쿼리 클라이언트 설정처럼 디자인 대응물이 없는 비-시각적 스캐폴딩 작업.
+
+## 디자인 토큰: Figma Variables가 원본
+
+색상 등의 디자인 토큰은 Figma Variables가 네이밍 원본입니다. 전체 팔레트를 미리 만들지 않고, 컴포넌트 작업 때 필요한 토큰만 그때그때 추가합니다 (FSD `shared` 승격 원칙과 같은 철학).
+
+**Figma에 변수로 등록되어 있지 않은 색상을 발견하면, 임의로 판단하지 말고 반드시 사용자에게 물어봅니다.** `get_variable_defs`가 돌려주지 않은 raw hex가 디자인에 있으면:
+
+1. 어떤 색이 어디에 쓰이는지 정리해서 사용자에게 보고합니다.
+2. 변수로 승격할지 / 해당 컴포넌트 안에 raw hex로 둘지를 **사용자가 정합니다**.
+3. 승격하기로 했다면 토큰 이름도 함께 확인한 뒤, Figma `Color` 컬렉션에 변수를 만들고 해당 노드에 바인딩한 다음 `theme.ts`에 반영합니다.
+
+Figma 변수 생성 시 기존 컨벤션을 따릅니다 — 이름은 `Group/Name`(예: `Primary/Blue`), `scopes`는 실제 쓰임에 맞게 명시(`ALL_SCOPES` 금지), `codeSyntax.WEB`은 `createTheme`이 만드는 CSS 변수명(`var(--sc-colors-<group>-<name>)`)과 일치시킵니다.
+
 ## TanStack Query: 쿼리 팩토리 패턴
 
 원시 쿼리 키/옵션을 컴포넌트 곳곳에 흩어놓지 않습니다. 데이터를 조회하는 각 entity/feature는 해당 슬라이스의 `api/` 폴더에 위치한 **쿼리 팩토리**를 정의하여 다음을 중앙화합니다:
@@ -45,14 +95,14 @@ shared/    — 비즈니스 로직과 무관한 재사용 코드 (UI 킷, 라이
 ```ts
 // entities/user/api/queries.ts
 export const userQueries = {
-  all: () => ['users'] as const,
-  lists: () => [...userQueries.all(), 'list'] as const,
+  all: () => ["users"] as const,
+  lists: () => [...userQueries.all(), "list"] as const,
   list: (filters: UserFilters) =>
     queryOptions({
       queryKey: [...userQueries.lists(), filters],
       queryFn: () => fetchUsers(filters),
     }),
-  details: () => [...userQueries.all(), 'detail'] as const,
+  details: () => [...userQueries.all(), "detail"] as const,
   detail: (id: string) =>
     queryOptions({
       queryKey: [...userQueries.details(), id],
@@ -73,8 +123,62 @@ export const userQueries = {
 
 자주 쓰는 type: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`. 예시: `feat(user): 사용자 목록 필터링 기능 추가`
 
+### 머지 커밋
+
+`develop` → `release` 릴리스 머지는 `chore(release): <한국어 설명>` 형식을 씁니다. 머지 커밋 자체는 새 기능을 넣지 않고(기능 정보는 안에 든 `feat(...)` 커밋들이 이미 가지고 있음) 묶음을 옮기는 작업이라 `chore`입니다.
+
+```bash
+git checkout release
+git merge --no-ff develop -m "chore(release): 사이드바 위젯 릴리스"
+```
+
+`--no-ff`로 머지 커밋을 반드시 남깁니다 — 릴리스 지점이 히스토리에 표시되고(`git log --first-parent release`), 문제가 생기면 `git revert -m 1 <머지커밋>`으로 릴리스를 통째로 되돌릴 수 있기 때문입니다.
+
 ## 브랜치 및 PR 전략
 
 - 장기 브랜치: `release`, `develop`
-- 작업 브랜치: `feat-*` (신규 기능), `fix-*` (버그 수정)
-- PR은 `feat-*` / `fix-*` 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
+- 작업 브랜치: `feat/*` (신규 기능), `fix/*` (버그 수정) — 예: `feat/pr-template`
+- PR은 `feat/*` / `fix/*` 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
+
+### `gh` CLI로 PR 생성하기
+
+저장소 기본 브랜치가 `release`라서 `gh pr create`는 base를 `release`로 잡습니다. 컨벤션에 맞추려면 **base를 `-B develop`으로 반드시 명시**해야 합니다.
+
+```bash
+git push -u origin <현재-브랜치>
+gh pr create -B develop --title "<제목>" --body-file <파일>
+```
+
+- 본문은 `.github/pull_request_template.md`를 채워서 `--body-file`로 전달합니다 (CLI 생성 시 템플릿이 자동 적용되지 않음).
+- origin이 다중 계정용 SSH 별칭(`git@my-github.com:...`)을 쓰지만, `gh`가 `~/.ssh/config`의 Host 별칭을 해석하므로 `-R` 없이 그대로 동작합니다.
+
+### rebase와 merge 중 무엇을 쓸 것인가
+
+원칙: **아직 공유하지 않은 커밋은 rebase, 이미 공유된 히스토리는 merge.** rebase는 커밋을 새로 만들어 갈아끼우므로(해시가 바뀜) "내 것"에만 씁니다.
+
+| 상황 | 방식 |
+| --- | --- |
+| `feat/*`·`fix/*`에 `develop` 최신 내용 가져오기 | **rebase** (`git rebase develop`) |
+| PR 올리기 전 커밋 정리 | **rebase -i** |
+| `feat/*`·`fix/*` → `develop` PR 머지 | **rebase merge** |
+| `develop` → `release` | **merge** |
+
+**두 방식을 섞지 않습니다.** 작업 브랜치에서 `git merge develop`으로 최신 내용을 가져오면, 나중에 rebase 머지를 할 때 GitHub이 그 머지 커밋을 버리면서 **머지가 해결해둔 충돌이 되살아납니다.** rebase로 머지할 계획이면 가져올 때도 rebase로 가져오세요. (실제 사례: [[이슈트래킹#rebase 머지 시 되살아난 CLAUDE.md 충돌]])
+
+기타 규칙:
+
+- `develop`·`release`는 여러 곳에서 공유되는 히스토리이므로 **절대 rebase하지 않습니다.**
+- 혼자 쓰는 작업 브랜치는 자유롭게 rebase해도 안전합니다. rebase 후에는 `git push --force-with-lease`를 씁니다 (`--force`가 아니라 — 원격이 그사이 바뀌었으면 거부해 줍니다).
+- 되돌릴 수 있도록 rebase 전에 백업 브랜치(`git branch backup/<이름>`)를 만들고, 끝난 뒤 `git diff --stat backup/<이름> HEAD`로 내용이 보존됐는지 확인합니다.
+- `git pull`은 상황에 따라 원치 않는 머지 커밋을 만듭니다. 확인만 할 때는 `git fetch`를 쓰고, 합칠 때는 `git pull --ff-only`를 씁니다. 이 저장소에는 `pull.ff=only`가 **로컬 설정으로** 걸려 있어 `git pull`만 해도 동일하게 동작합니다 (전역 설정이 아니므로 다른 저장소에서는 `--ff-only`를 직접 붙여야 합니다).
+- **`rerere`는 쓰지 않습니다.** 예전 충돌 해결을 기억했다가 자동 적용해 주는 기능이지만, 그 해결이 지금 맥락에도 맞는지는 git이 판단하지 못합니다. 특히 문서처럼 같은 위치가 반복해서 부딪히는 파일에서 위험합니다. 번거롭더라도 충돌은 매번 직접 확인하고 해결합니다.
+
+## Obsidian 기록 자동화
+
+이 프로젝트의 작업 기록은 Obsidian 볼트의 `10_Projects/admin-dashboard/`에 남깁니다. 사용자가 "정리해줘"라고 요청하지 않아도, 아래 상황이 발생하면 먼저 나서서 해당 파일에 기록합니다.
+
+- **`작업일지/YYYY-MM-DD.md`**: 그날의 논의·결정을 시간순으로 append. 결정이 확정되는 시점마다 즉시 기록하고, 하루 끝에 몰아서 정리하지 않습니다 (여러 결정이 섞이면 "왜 그렇게 정했는지" 맥락이 손실되기 때문).
+- **`개요.md`**: 프로젝트의 현재 스냅샷. 새로운 사실을 append하지 않고 항상 최신 상태로 덮어씁니다 — 목적/범위, 기술 스택 요약, 현재 진행 상황, 지금까지 확정된 주요 결정 요약, 관련 링크. 진행 상황이나 확정된 결정이 바뀔 때마다 해당 섹션을 갱신합니다.
+- **`이슈트래킹.md`**: 에러를 진단하고 해결했을 때 기록. 형식은 증상 → 진단 과정 → 해결 → 교훈/앞으로 적용할 규칙. 사소한 오타 수정이 아니라, 원인 파악에 시간이 든 실질적인 버그일 때 기록합니다.
+
+세 파일 모두 서로 링크(`[[파일명#섹션]]`)로 연결해서 참조합니다.
