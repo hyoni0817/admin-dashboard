@@ -1,0 +1,50 @@
+name: PR 스크린샷 정리
+
+# PR이 닫히면 pr-assets 브랜치에서 해당 PR의 이미지를 지운다.
+# 이게 없으면 커밋마다 디렉터리가 하나씩 쌓여 브랜치가 무한정 커진다.
+# (paths 필터를 걸지 않으려고 캡처 워크플로와 파일을 분리했다 — 필터에 걸리면 정리가 누락된다.)
+on:
+  pull_request:
+    branches: [develop]
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    env:
+      ASSET_BRANCH: pr-assets
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+
+    steps:
+      - name: pr-assets에서 해당 PR 디렉터리 삭제
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          WORK="$(mktemp -d)"
+          cd "$WORK"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          if ! git fetch -q --depth 1 origin "$ASSET_BRANCH" 2>/dev/null; then
+            echo "$ASSET_BRANCH 브랜치가 없습니다. 정리할 것이 없습니다."
+            exit 0
+          fi
+          git checkout -q -B "$ASSET_BRANCH" FETCH_HEAD
+
+          if [ ! -d "pr-${PR_NUMBER}" ]; then
+            echo "pr-${PR_NUMBER} 디렉터리가 없습니다. 정리할 것이 없습니다."
+            exit 0
+          fi
+
+          git rm -rq "pr-${PR_NUMBER}"
+          git commit -qm "chore: PR #${PR_NUMBER} 스크린샷 정리"
+          git push -q origin "$ASSET_BRANCH"
+          echo "pr-${PR_NUMBER} 삭제 완료"

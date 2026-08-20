@@ -1,0 +1,147 @@
+name: PR 스크린샷
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened]
+    # 문서만 고친 PR에서 빌드까지 돌릴 이유가 없다.
+    paths:
+      - "src/**"
+      - "scripts/shots.mjs"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/pr-screenshots.yml"
+
+permissions:
+  contents: write # pr-assets 브랜치에 푸시
+  pull-requests: write # sticky 코멘트 작성/수정
+
+concurrency:
+  group: pr-screenshots-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    # 포크에서 온 PR은 GITHUB_TOKEN이 읽기 전용이라 푸시·코멘트가 실패한다.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    env:
+      ASSET_BRANCH: pr-assets
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Chromium 설치
+        run: npx playwright install --with-deps chromium
+
+      # 서버 기동과 캡처를 한 스텝에 두는 이유: 백그라운드 프로세스가 스텝 경계를 넘어
+      # 살아남는 것에 의존하지 않기 위함.
+      - name: 빌드 · 기동 · 캡처
+        run: |
+          npm run build
+          npm run start &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          for _ in $(seq 1 60); do
+            if curl -sf http://localhost:3000 >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -sf http://localhost:3000 >/dev/null || { echo "::error::서버가 60초 안에 뜨지 않았습니다"; exit 1; }
+
+          npm run shots
+
+      - name: pr-assets 브랜치에 업로드
+        id: upload
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHORT="${HEAD_SHA:0:7}"
+          # 커밋마다 경로를 바꾼다. 같은 URL을 재사용하면 raw.githubusercontent와
+          # GitHub 이미지 프록시(camo) 캐시 때문에 예전 스크린샷이 계속 보인다.
+          DEST="pr-${PR_NUMBER}/${SHORT}"
+
+          WORK="$(mktemp -d)"
+          cd "$WORK"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # 다른 PR이 동시에 밀어넣으면 non-fast-forward로 거절된다. 다시 받아서 재시도.
+          for attempt in 1 2 3; do
+            rm -rf .git/FETCH_HEAD
+            # 빈 저장소에서 브랜치를 새로 만들면 첫 커밋이 root commit이 된다 (= orphan).
+            if git fetch -q --depth 1 origin "$ASSET_BRANCH" 2>/dev/null; then
+              git checkout -q -B "$ASSET_BRANCH" FETCH_HEAD
+            else
+              git checkout -q -B "$ASSET_BRANCH"
+            fi
+
+            mkdir -p "$DEST"
+            cp "$GITHUB_WORKSPACE"/.shots/* "$DEST"/
+            git add "$DEST"
+            git diff --cached --quiet || git commit -qm "chore: PR #${PR_NUMBER} 스크린샷 (${SHORT})"
+
+            if git push -q origin "$ASSET_BRANCH"; then
+              break
+            fi
+            if [ "$attempt" = 3 ]; then
+              echo "::error::pr-assets 푸시에 3회 실패했습니다"
+              exit 1
+            fi
+            echo "푸시 충돌 — 재시도 $attempt"
+            sleep $((attempt * 3))
+          done
+
+          echo "dest=$DEST" >> "$GITHUB_OUTPUT"
+          echo "short=$SHORT" >> "$GITHUB_OUTPUT"
+
+      - name: sticky 코멘트 갱신
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEST: ${{ steps.upload.outputs.dest }}
+          SHORT: ${{ steps.upload.outputs.short }}
+        run: |
+          set -euo pipefail
+          RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${ASSET_BRANCH}/${DEST}"
+
+          cat > comment.md <<EOF
+          <!-- shots-bot -->
+          ## 📸 스크린샷
+
+          <sub>\`${SHORT}\` 기준 · 자동 생성 · 푸시할 때마다 이 코멘트가 갱신됩니다</sub>
+
+          | 기본 | Hover |
+          | --- | --- |
+          | <img src="${RAW}/sidebar-default.png" width="240"> | <img src="${RAW}/sidebar-hover.png" width="240"> |
+
+          **메뉴 영역 내부 스크롤** — 로고는 고정되고 메뉴만 스크롤됩니다
+
+          <img src="${RAW}/sidebar-scroll.gif" width="240">
+          EOF
+
+          # 마커로 기존 코멘트를 찾아 수정한다. 없으면 새로 만든다.
+          # `| head -1`을 쓰면 gh가 SIGPIPE로 죽어 pipefail에 걸리므로 jq 안에서 first를 쓴다.
+          ID="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" --paginate \
+                 --jq '[.[] | select(.body | contains("<!-- shots-bot -->")) | .id] | first // empty')"
+          ID="${ID%%$'\n'*}"
+
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${ID}" -F body=@comment.md >/dev/null
+            echo "코멘트 $ID 갱신"
+          else
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" -F body=@comment.md >/dev/null
+            echo "코멘트 신규 생성"
+          fi
