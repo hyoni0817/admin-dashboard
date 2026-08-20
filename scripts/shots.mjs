@@ -52,19 +52,26 @@ async function openPage(browser, viewport) {
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
-  await page.goto(BASE_URL, { waitUntil: "networkidle" });
+  // networkidle은 쓰지 않는다 — 프로덕션 빌드에서 Next가 뷰포트 안의 <Link>를 자동 prefetch해서
+  // 네트워크가 조용해지지 않는다. 대신 아래에서 폰트와 실제 요소를 명시적으로 기다린다.
+  await page.goto(BASE_URL, { waitUntil: "load" });
   await page.addStyleTag({ content: FREEZE_CSS });
   // 웹폰트가 늦게 붙으면 글자 폭이 바뀌어 레이아웃이 흔들린다.
   await page.evaluate(() => document.fonts.ready);
   return { context, page };
 }
 
-/** 셀렉터가 조용히 빗나가면 빈 화면을 첨부하게 되므로, 없으면 실패시킨다. */
-async function require1(page, selector, what) {
-  const locator = page.locator(selector);
-  const count = await locator.count();
-  if (count === 0) throw new Error(`${what}을(를) 찾지 못했습니다: ${selector}`);
-  return locator.first();
+/** 셀렉터가 조용히 빗나가면 빈 화면을 첨부하게 되므로, 나타날 때까지 기다리고 없으면 실패시킨다. */
+async function require1(page, locatorOrSelector, what) {
+  const locator = (
+    typeof locatorOrSelector === "string" ? page.locator(locatorOrSelector) : locatorOrSelector
+  ).first();
+  try {
+    await locator.waitFor({ state: "visible", timeout: 15_000 });
+  } catch {
+    throw new Error(`${what}을(를) 찾지 못했습니다`);
+  }
+  return locator;
 }
 
 async function captureStills(browser) {
@@ -74,8 +81,11 @@ async function captureStills(browser) {
 
     await sidebar.screenshot({ path: join(OUT_DIR, "sidebar-default.png") });
 
-    const target = page.getByRole("link", { name: "Products", exact: true });
-    if ((await target.count()) === 0) throw new Error("hover 대상 메뉴(Products)를 찾지 못했습니다");
+    const target = await require1(
+      page,
+      page.getByRole("link", { name: "Products", exact: true }),
+      "hover 대상 메뉴(Products)"
+    );
     await target.hover();
     // hover는 즉시 반영되지만, 렌더 프레임이 한 번 지나간 뒤 찍어야 안전하다.
     await page.waitForTimeout(120);
