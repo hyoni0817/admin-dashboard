@@ -149,7 +149,29 @@ git merge --no-ff develop -m "chore(release): 사이드바 위젯 릴리스"
 - 장기 브랜치: `release`, `develop`
 - 작업 브랜치: `feat/*` (신규 기능), `fix/*` (버그 수정), `docs/*` (문서·규칙 변경) — 예: `feat/pr-template`, `docs/git-merge-strategy`
 - PR은 작업 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
-- **`develop`에 직접 커밋하지 않습니다.** 한 줄짜리 문서 수정이라도 작업 브랜치를 팝니다 — 브랜치를 여는 비용보다, 히스토리에서 "이 변경이 어느 PR에서 왔는지"가 끊기는 비용이 큽니다. 작업이 작으면 브랜치 이름을 넓게 잡아 관련 변경을 한 PR에 모으세요.
+
+### `develop`·`release`에 직접 커밋하지 않습니다
+
+**모든 커밋은 작업 브랜치에서 만들어 PR로 머지합니다.** 한 줄짜리 오타 수정이라도 예외가 아닙니다 — 브랜치를 여는 비용보다, 히스토리에서 "이 변경이 어느 PR에서 왔는지"가 끊기는 비용이 큽니다.
+
+작업이 작아서 브랜치가 번거롭게 느껴지면, 브랜치를 만들지 않는 게 아니라 **이름을 넓게 잡아 관련 변경을 한 PR에 모읍니다.** `docs/split-shared-rules`처럼 좁게 잡으면 규칙 하나 고칠 때마다 브랜치가 생기지만, `docs/claude-md-cleanup`으로 잡으면 그 파일에 대한 정비를 한 PR에 담을 수 있습니다.
+
+**유일한 예외는 hotfix입니다.** 이미 릴리스된 것이 망가져서 PR 라운드를 기다릴 수 없을 때만 `release`에 직접 커밋합니다. 단순히 "급하다"거나 "사소하다"는 예외 사유가 되지 않습니다.
+
+hotfix 후에는 **반드시 `release`를 `develop`으로 되돌려 머지합니다.** 이걸 빠뜨리면 수정이 `develop`에 없는 채로 다음 릴리스가 나가면서 **고쳤던 버그가 되살아납니다.**
+
+```bash
+git checkout develop
+git merge --no-ff release -m "chore: hotfix <설명>를 develop에 반영"
+```
+
+실수로 `develop`에 직접 커밋했다면, **푸시 전이라면** 되돌리기 쉽습니다 — `git reset --soft HEAD~1`로 커밋만 풀면 변경이 staged 상태로 남으므로, 브랜치를 판 뒤 그대로 다시 커밋하면 됩니다.
+
+```bash
+git reset --soft HEAD~1
+git switch -c <type>/<이름>
+git commit -F <메시지파일>
+```
 
 ### `gh` CLI로 PR 생성하기
 
