@@ -31,6 +31,18 @@ shared/    — 비즈니스 로직과 무관한 재사용 코드 (UI 킷, 라이
 - 이 프로젝트는 Next.js를 사용하므로, Next.js App Router가 사용하는 `app/` 디렉토리(라우팅)와 FSD의 `app` 레이어(전역 설정/provider)는 서로 다른 개념입니다 — Next의 라우팅 파일은 최대한 얇게 유지하고, 실제 페이지 조합은 라우트 파일에서 import하는 FSD `pages`(또는 `views`) 슬라이스에 위임하세요.
 - **`shared`로의 섣부른 승격 금지**: 특정 위젯/페이지에서만 쓰이는 컴포넌트(예: 사이드바 전용 `NavLink`, `MenuItem`)는 재사용 가능성이 있어 보여도 처음에는 해당 슬라이스 내부(`widgets/sidebar/ui/`)에 둡니다. 실제로 두 번째 소비자가 생겼을 때 그 시점에 `shared/ui`로 끌어올리세요. `shared`는 "실제로 여러 슬라이스에서 재사용 중인" 코드를 위한 곳이지, "나중에 재사용될 수도 있는" 코드를 미리 두는 곳이 아닙니다.
 
+### 이름 짓기
+
+| 대상 | 방식 | 예 |
+| --- | --- | --- |
+| 슬라이스·레이어 폴더 | kebab-case | `widgets/header`, `features/add-comment` |
+| 비컴포넌트 파일 | kebab-case | `nav-items.ts`, `query-client.ts`, `styled-components-registry.tsx` |
+| 컴포넌트 파일 | PascalCase | `Sidebar.tsx`, `SidebarItem.tsx` |
+| 스타일 파일 | `<컴포넌트>.styles.ts` | `Sidebar.styles.ts` |
+| public API | 항상 `index.ts` | `widgets/sidebar/index.ts` |
+
+**슬라이스 이름은 한 단어로 자연스러우면 한 단어를 씁니다.** `sidebar`가 하이픈 없이 붙어 있는 것은 컨벤션이 달라서가 아니라 영어에서 원래 한 낱말이기 때문입니다. 상단 바를 `top-bar`가 아니라 `header`로 부르는 것도 같은 이유입니다 — `sidebar`와 짝이 맞고, 구분자를 넣을지 고민할 일이 없습니다. 두 단어 이상이 불가피하면 하이픈으로 잇습니다.
+
 ## styled-components: 스타일 파일 분리 컨벤션
 
 일반 컴포넌트와 styled-components를 한 파일에서 섞어 쓰지 않습니다. 컴포넌트별로 스타일 정의 파일을 분리하고 `S.` 네임스페이스로 import해서 사용합니다:
