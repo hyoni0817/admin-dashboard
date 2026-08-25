@@ -2,6 +2,8 @@
 
 이 파일은 이 저장소에서 작업할 때 Claude Code(claude.ai/code)에게 제공되는 가이드입니다.
 
+여러 프로젝트에 공통인 규칙(Obsidian 기록, 커밋 컨벤션 기본형, 비밀값 취급)은 `~/.claude/CLAUDE.md`에 있습니다. 이 파일은 **이 저장소에만 해당하는 것**만 담습니다.
+
 ## 기술 스택
 
 - **Next.js** + **React** + **TypeScript**
@@ -113,15 +115,9 @@ export const userQueries = {
 
 컴포넌트/훅은 쿼리 키나 옵션을 직접 구성하지 않고 이 팩토리를 그대로 사용합니다 (`useQuery(userQueries.detail(id))`). 이렇게 하면 키 무효화(`queryClient.invalidateQueries({ queryKey: userQueries.all() })`)를 신뢰성 있게 중앙에서 관리할 수 있습니다.
 
-## Git 커밋 컨벤션
+## 커밋 type과 머지 커밋
 
-[Conventional Commits](https://www.conventionalcommits.org/ko/v1.0.0/)를 따르되, 커밋 설명은 **한국어**로 작성합니다:
-
-```
-<type>(<optional scope>): <한국어 설명>
-```
-
-자주 쓰는 type: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`. 예시: `feat(user): 사용자 목록 필터링 기능 추가`
+기본 형식(Conventional Commits, 설명은 한국어)은 `~/.claude/CLAUDE.md`에 있습니다. 이 저장소에서 자주 쓰는 type: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`. 예시: `feat(user): 사용자 목록 필터링 기능 추가`
 
 ### 머지 커밋
 
@@ -173,12 +169,8 @@ gh pr create -B develop --title "<제목>" --body-file <파일>
 - `git pull`은 상황에 따라 원치 않는 머지 커밋을 만듭니다. 확인만 할 때는 `git fetch`를 쓰고, 합칠 때는 `git pull --ff-only`를 씁니다. 이 저장소에는 `pull.ff=only`가 **로컬 설정으로** 걸려 있어 `git pull`만 해도 동일하게 동작합니다 (전역 설정이 아니므로 다른 저장소에서는 `--ff-only`를 직접 붙여야 합니다).
 - **`rerere`는 쓰지 않습니다.** 예전 충돌 해결을 기억했다가 자동 적용해 주는 기능이지만, 그 해결이 지금 맥락에도 맞는지는 git이 판단하지 못합니다. 특히 문서처럼 같은 위치가 반복해서 부딪히는 파일에서 위험합니다. 번거롭더라도 충돌은 매번 직접 확인하고 해결합니다.
 
-## Obsidian 기록 자동화
+## Obsidian 기록 — 이 저장소의 사정
 
-이 프로젝트의 작업 기록은 Obsidian 볼트의 `10_Projects/admin-dashboard/`에 남깁니다. 사용자가 "정리해줘"라고 요청하지 않아도, 아래 상황이 발생하면 먼저 나서서 해당 파일에 기록합니다.
+기록 폴더는 `10_Projects/admin-dashboard/`입니다. 무엇을 언제 어떻게 기록하는지는 `~/.claude/CLAUDE.md`에 있습니다.
 
-- **`작업일지/YYYY-MM-DD.md`**: 그날의 논의·결정을 시간순으로 append. 결정이 확정되는 시점마다 즉시 기록하고, 하루 끝에 몰아서 정리하지 않습니다 (여러 결정이 섞이면 "왜 그렇게 정했는지" 맥락이 손실되기 때문).
-- **`개요.md`**: 프로젝트의 현재 스냅샷. 새로운 사실을 append하지 않고 항상 최신 상태로 덮어씁니다 — 목적/범위, 기술 스택 요약, 현재 진행 상황, 지금까지 확정된 주요 결정 요약, 관련 링크. 진행 상황이나 확정된 결정이 바뀔 때마다 해당 섹션을 갱신합니다.
-- **`이슈트래킹.md`**: 에러를 진단하고 해결했을 때 기록. 형식은 증상 → 진단 과정 → 해결 → 교훈/앞으로 적용할 규칙. 사소한 오타 수정이 아니라, 원인 파악에 시간이 든 실질적인 버그일 때 기록합니다.
-
-세 파일 모두 서로 링크(`[[파일명#섹션]]`)로 연결해서 참조합니다.
+**quiz-bot과 같은 볼트를 씁니다.** 이 폴더의 기록, 특히 `이슈트래킹.md`의 항목들이 quiz-bot 퀴즈 문제 은행의 소스가 됩니다 — 여기를 어떻게 기록하느냐가 그쪽 문제 품질에 영향을 줍니다. 두 프로젝트에 걸친 결정은 각자의 폴더에 기록하고 `[[10_Projects/quiz-bot/개요]]`처럼 서로 링크합니다.
