@@ -73,6 +73,8 @@ export function Logo() {
 - `figma-design-to-code` 스킬 규칙에 따라 `get_design_context`로 디자인 컨텍스트를 가져온 뒤 프로젝트 스택(FSD, styled-components)에 맞게 변환합니다.
 - 예외: provider/쿼리 클라이언트 설정처럼 디자인 대응물이 없는 비-시각적 스캐폴딩 작업.
 
+**아이콘은 Figma에서 가져올 수 없습니다.** DashStack 킷의 아이콘은 벡터가 아니라 파일에 없는 아이콘 폰트의 글리프라, export해도 빈 사각형만 나옵니다. 임의로 SVG를 그리지 말고 컴포넌트에 슬롯(`icon?: ReactNode`)만 열어두세요 — `SidebarItem`이 그렇게 되어 있습니다. 아이콘 소스가 정해지면 슬롯을 채우는 쪽(`nav-items.ts` 등)만 고치면 됩니다.
+
 ## 디자인 토큰: Figma Variables가 원본
 
 색상 등의 디자인 토큰은 Figma Variables가 네이밍 원본입니다. 전체 팔레트를 미리 만들지 않고, 컴포넌트 작업 때 필요한 토큰만 그때그때 추가합니다 (FSD `shared` 승격 원칙과 같은 철학).
@@ -119,6 +121,18 @@ export const userQueries = {
 
 기본 형식(Conventional Commits, 설명은 한국어)은 `~/.claude/CLAUDE.md`에 있습니다. 이 저장소에서 자주 쓰는 type: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`. 예시: `feat(user): 사용자 목록 필터링 기능 추가`
 
+**커밋 본문은 `-합니다`가 아니라 `-함`(명사형 종결)으로 씁니다.** 제목과 본문의 어투를 맞추고 줄을 짧게 유지하기 위해서입니다.
+
+```
+fix(ci): 캡처 대기 조건을 networkidle에서 load로 변경
+
+CI에서 `page.goto`가 30초 타임아웃으로 실패함. 프로덕션 빌드에서는 Next가
+뷰포트 안의 `<Link>`를 자동 prefetch해서 네트워크가 조용해지지 않기 때문.
+
+- `waitUntil`을 `load`로 바꾸고, 대신 폰트와 실제 요소를 명시적으로 기다림
+- 프로덕션 빌드로 재현해 통과 확인함
+```
+
 ### 머지 커밋
 
 `develop` → `release` 릴리스 머지는 `chore(release): <한국어 설명>` 형식을 씁니다. 머지 커밋 자체는 새 기능을 넣지 않고(기능 정보는 안에 든 `feat(...)` 커밋들이 이미 가지고 있음) 묶음을 옮기는 작업이라 `chore`입니다.
@@ -133,8 +147,9 @@ git merge --no-ff develop -m "chore(release): 사이드바 위젯 릴리스"
 ## 브랜치 및 PR 전략
 
 - 장기 브랜치: `release`, `develop`
-- 작업 브랜치: `feat/*` (신규 기능), `fix/*` (버그 수정) — 예: `feat/pr-template`
-- PR은 `feat/*` / `fix/*` 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
+- 작업 브랜치: `feat/*` (신규 기능), `fix/*` (버그 수정), `docs/*` (문서·규칙 변경) — 예: `feat/pr-template`, `docs/git-merge-strategy`
+- PR은 작업 브랜치를 `develop`으로 머지합니다 (`release`로 직접 머지하지 않음).
+- **`develop`에 직접 커밋하지 않습니다.** 한 줄짜리 문서 수정이라도 작업 브랜치를 팝니다 — 브랜치를 여는 비용보다, 히스토리에서 "이 변경이 어느 PR에서 왔는지"가 끊기는 비용이 큽니다. 작업이 작으면 브랜치 이름을 넓게 잡아 관련 변경을 한 PR에 모으세요.
 
 ### `gh` CLI로 PR 생성하기
 
@@ -148,15 +163,24 @@ gh pr create -B develop --title "<제목>" --body-file <파일>
 - 본문은 `.github/pull_request_template.md`를 채워서 `--body-file`로 전달합니다 (CLI 생성 시 템플릿이 자동 적용되지 않음).
 - origin이 다중 계정용 SSH 별칭(`git@my-github.com:...`)을 쓰지만, `gh`가 `~/.ssh/config`의 Host 별칭을 해석하므로 `-R` 없이 그대로 동작합니다.
 
+### PR 스크린샷은 자동으로 붙습니다
+
+UI 변경 PR에는 이미지 첨부가 필수지만(`.github/pull_request_template.md`), **직접 첨부할 필요는 없습니다.** 브랜치를 푸시하면 `.github/workflows/pr-screenshots.yml`이 `scripts/shots.mjs`(Playwright)를 돌려 캡처하고, 이미지를 `pr-assets` orphan 브랜치에 올린 뒤 sticky 코멘트로 임베드합니다. PR이 닫히면 해당 디렉터리는 자동 정리됩니다.
+
+- **새 화면을 캡처 대상에 넣으려면** `scripts/shots.mjs`의 `SCENARIOS` 배열에 항목을 추가합니다 (`name`·`path`·`viewport`·`clip`·`hover`·`scrollGif`). 캡처 로직은 건드리지 않습니다.
+- 뷰포트는 `VIEWPORTS` 맵에 이름을 붙여두고 시나리오에서 키로 참조합니다.
+- 인터랙션은 mp4가 아니라 **GIF**로 뽑습니다 — 마크다운 `![]()`는 이미지만 렌더링하기 때문입니다.
+- 시나리오가 늘어 파일이 무거워지면 슬라이스별 `*.shots.mjs`로 쪼개되, 그건 **두 번째 소비자가 생겼을 때** 합니다 (`shared` 승격 원칙과 같은 판단).
+
 ### rebase와 merge 중 무엇을 쓸 것인가
 
 원칙: **아직 공유하지 않은 커밋은 rebase, 이미 공유된 히스토리는 merge.** rebase는 커밋을 새로 만들어 갈아끼우므로(해시가 바뀜) "내 것"에만 씁니다.
 
 | 상황 | 방식 |
 | --- | --- |
-| `feat/*`·`fix/*`에 `develop` 최신 내용 가져오기 | **rebase** (`git rebase develop`) |
+| 작업 브랜치에 `develop` 최신 내용 가져오기 | **rebase** (`git rebase develop`) |
 | PR 올리기 전 커밋 정리 | **rebase -i** |
-| `feat/*`·`fix/*` → `develop` PR 머지 | **rebase merge** |
+| 작업 브랜치 → `develop` PR 머지 | **rebase merge** |
 | `develop` → `release` | **merge** |
 
 **두 방식을 섞지 않습니다.** 작업 브랜치에서 `git merge develop`으로 최신 내용을 가져오면, 나중에 rebase 머지를 할 때 GitHub이 그 머지 커밋을 버리면서 **머지가 해결해둔 충돌이 되살아납니다.** rebase로 머지할 계획이면 가져올 때도 rebase로 가져오세요. (실제 사례: [[이슈트래킹#rebase 머지 시 되살아난 CLAUDE.md 충돌]])
