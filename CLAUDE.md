@@ -94,10 +94,12 @@ export function Logo() {
 ### 토큰 이름은 값 기반으로 짓습니다
 
 ```
-Figma:  <색상 계열>/<색 이름><명도 단계>      예) Neutral/Gray50, Rose/Rose500
-코드:   theme.colors.<계열>.<이름><단계>      예) theme.colors.rose.rose500
-CSS:    var(--sc-colors-<계열>-<이름><단계>)
+Figma:  <색상 계열>/<명도 단계>       예) Gray/50, Rose/500
+코드:   theme.colors.<계열>[<단계>]   예) theme.colors.gray[50], theme.colors.rose[500]
+CSS:    var(--sc-colors-<계열>-<단계>)
 ```
+
+계열 이름이 곧 색이므로 **키에는 명도 단계만 씁니다** — `rose.rose500`처럼 색 이름을 두 번 쓰지 않습니다. 명도 단계가 하나뿐인 색(`White`)은 그룹 없이 둡니다.
 
 **`Alert`·`Accent`·`Secondary` 같은 역할 이름은 그 역할을 실제로 소유할 때만 붙입니다.** 미리 넓은 역할을 선언하면 그 이름이 나중에 거짓이 됩니다 — 예를 들어 알림 뱃지 색을 `Alert/Red`라고 지어두면, 폼 검증 에러가 다른 빨강일 때 정작 alert에는 쓰이지 않는 토큰이 `Alert`라는 이름을 점유하게 됩니다.
 

@@ -17,8 +17,8 @@ export const Aside = styled.aside`
   height: 100dvh;
   /* 하단 41px은 Nav 안쪽 padding으로 옮겼다 — 스크롤바가 사이드바 끝까지 닿게 하기 위함 */
   padding-top: 24px;
-  background: ${theme.colors.neutral.white};
-  border-right: 1px solid ${theme.colors.neutral.gray100};
+  background: ${theme.colors.white};
+  border-right: 1px solid ${theme.colors.gray[100]};
 `;
 
 export const LogoArea = styled.div`
@@ -49,7 +49,7 @@ export const Nav = styled.nav`
   scrollbar-color: transparent transparent;
 
   &:hover {
-    scrollbar-color: ${theme.colors.neutral.gray200} transparent;
+    scrollbar-color: ${theme.colors.gray[200]} transparent;
   }
 
   &::-webkit-scrollbar {
@@ -64,7 +64,7 @@ export const Nav = styled.nav`
   }
 
   &:hover::-webkit-scrollbar-thumb {
-    background: ${theme.colors.neutral.gray200};
+    background: ${theme.colors.gray[200]};
     background-clip: content-box;
   }
 `;
@@ -73,7 +73,7 @@ export const Divider = styled.hr`
   height: 1px;
   margin: 16px 0;
   border: 0;
-  background: ${theme.colors.neutral.gray200};
+  background: ${theme.colors.gray[200]};
 `;
 
 export const SectionTitle = styled.p`

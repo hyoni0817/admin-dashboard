@@ -14,8 +14,8 @@ export const Bar = styled.header`
   gap: 24px;
   height: 70px;
   padding: 0 31px 0 30px;
-  background: ${theme.colors.neutral.white};
-  border-bottom: 1px solid ${theme.colors.neutral.gray100};
+  background: ${theme.colors.white};
+  border-bottom: 1px solid ${theme.colors.gray[100]};
 `;
 
 export const LeftGroup = styled.div`
@@ -45,9 +45,9 @@ export const Search = styled.div`
   max-width: 100%;
   height: 38px;
   padding: 0 16px;
-  background: ${theme.colors.neutral.grayBlue50};
+  background: ${theme.colors.grayBlue[50]};
   /* Figma는 0.6px이지만 1px 미만은 브라우저마다 렌더링이 달라 1px로 둔다 */
-  border: 1px solid ${theme.colors.neutral.gray300};
+  border: 1px solid ${theme.colors.gray[300]};
   border-radius: 19px;
   color: ${theme.colors.text.primary};
 `;
@@ -107,20 +107,20 @@ export const Badge = styled.span`
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: ${theme.colors.rose.rose500};
-  box-shadow: 0 0 0 1px ${theme.colors.rose.rose500}1a;
+  background: ${theme.colors.rose[500]};
+  box-shadow: 0 0 0 1px ${theme.colors.rose[500]}1a;
   font-family: var(--font-nunito-sans);
   font-weight: 700;
   font-size: 12px;
   line-height: 1;
-  color: ${theme.colors.neutral.white};
+  color: ${theme.colors.white};
 `;
 
 export const Language = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
-  color: ${theme.colors.neutral.gray600};
+  color: ${theme.colors.gray[600]};
 `;
 
 /**
@@ -132,7 +132,7 @@ export const FlagSlot = styled.div`
   width: 40px;
   height: 27px;
   border-radius: 5px;
-  background: ${theme.colors.neutral.gray200};
+  background: ${theme.colors.gray[200]};
 `;
 
 export const LanguageLabel = styled.span`
@@ -142,7 +142,7 @@ export const LanguageLabel = styled.span`
   font-family: var(--font-nunito-sans);
   font-weight: 600;
   font-size: 14px;
-  color: ${theme.colors.neutral.gray600};
+  color: ${theme.colors.gray[600]};
 `;
 
 export const Profile = styled.div`
@@ -157,7 +157,7 @@ export const AvatarSlot = styled.div`
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: ${theme.colors.neutral.gray200};
+  background: ${theme.colors.gray[200]};
 `;
 
 export const ProfileText = styled.div`
@@ -171,7 +171,7 @@ export const ProfileName = styled.span`
   font-weight: 700;
   font-size: 14px;
   line-height: normal;
-  color: ${theme.colors.neutral.gray800};
+  color: ${theme.colors.gray[800]};
 `;
 
 export const ProfileRole = styled.span`
@@ -179,7 +179,7 @@ export const ProfileRole = styled.span`
   font-weight: 600;
   font-size: 12px;
   line-height: normal;
-  color: ${theme.colors.neutral.gray700};
+  color: ${theme.colors.gray[700]};
 `;
 
 export const ProfileChevron = styled.span`

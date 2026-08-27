@@ -33,13 +33,13 @@ export const Item = styled(Link)<{ $active: boolean }>`
   /* hover 배경. active일 때는 파란 바가 이미 자리를 차지하므로 적용하지 않는다 */
   &:hover::before {
     ${barShape}
-    background: ${theme.colors.neutral.gray50};
+    background: ${theme.colors.gray[50]};
   }
 
   ${({ $active }) =>
     $active &&
     css`
-      color: ${theme.colors.neutral.white};
+      color: ${theme.colors.white};
 
       /* 본체 */
       &::before,
