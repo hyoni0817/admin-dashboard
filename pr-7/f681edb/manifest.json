@@ -1,0 +1,34 @@
+[
+  {
+    "name": "header-default",
+    "file": "header-default.png",
+    "group": "헤더",
+    "label": "기본",
+    "caption": null,
+    "width": 720
+  },
+  {
+    "name": "sidebar-default",
+    "file": "sidebar-default.png",
+    "group": "사이드바",
+    "label": "기본",
+    "caption": null,
+    "width": 240
+  },
+  {
+    "name": "sidebar-hover",
+    "file": "sidebar-hover.png",
+    "group": "사이드바",
+    "label": "Hover",
+    "caption": null,
+    "width": 240
+  },
+  {
+    "name": "sidebar-scroll",
+    "file": "sidebar-scroll.gif",
+    "group": "사이드바",
+    "label": "메뉴 영역 내부 스크롤",
+    "caption": "로고는 고정되고 메뉴만 스크롤됩니다",
+    "width": 240
+  }
+]
