@@ -41,23 +41,50 @@ const VIEWPORTS = {
  *   hover      { role, name } — 찍기 전에 이 요소에 hover
  *   scrollGif  { target } — target을 끝까지 스크롤하며 GIF로 만든다
  *
+ * PR 코멘트에 어떻게 실릴지도 여기서 정한다. 예전에는 코멘트 마크다운이
+ * 워크플로에 하드코딩돼 있어서, 시나리오를 추가해도 이미지가 찍히기만 하고
+ * 코멘트에는 나타나지 않았다 (헤더 위젯에서 실제로 겪음).
+ *
+ *   group      코멘트에서 묶일 섹션 제목
+ *   label      표의 열 제목
+ *   caption    섹션 아래에 붙는 설명 (선택)
+ *   width      코멘트에 렌더링될 폭 (기본 240)
+ *
  * 소비자가 여럿이 되면 이 배열을 `widgets/<슬라이스>/*.shots.mjs`로 쪼개고
  * glob으로 모으는 방식이 다음 단계다. 지금은 소비자가 하나뿐이라 여기 둔다.
  */
 const SCENARIOS = [
-  { name: "header-default", viewport: "still", clip: "header" },
-  { name: "sidebar-default", viewport: "still", clip: "aside" },
+  {
+    name: "header-default",
+    viewport: "still",
+    clip: "header",
+    group: "헤더",
+    label: "기본",
+    width: 720,
+  },
+  {
+    name: "sidebar-default",
+    viewport: "still",
+    clip: "aside",
+    group: "사이드바",
+    label: "기본",
+  },
   {
     name: "sidebar-hover",
     viewport: "still",
     clip: "aside",
     hover: { role: "link", name: "Products" },
+    group: "사이드바",
+    label: "Hover",
   },
   {
     name: "sidebar-scroll",
     viewport: "short",
     clip: "aside",
     scrollGif: { target: "aside nav" },
+    group: "사이드바",
+    label: "메뉴 영역 내부 스크롤",
+    caption: "로고는 고정되고 메뉴만 스크롤됩니다",
   },
 ];
 
@@ -200,6 +227,21 @@ async function main() {
   } finally {
     await browser.close();
   }
+
+  // 코멘트 렌더러(shots-comment.mjs)가 읽는다. 파일명뿐 아니라 표시 정보까지
+  // 함께 남겨야 코멘트가 시나리오를 따라온다.
+  const manifest = SCENARIOS.map((s, i) => ({
+    name: s.name,
+    file: written[i],
+    group: s.group ?? "스크린샷",
+    label: s.label ?? s.name,
+    caption: s.caption ?? null,
+    width: s.width ?? 240,
+  }));
+  await writeFile(
+    join(OUT_DIR, "manifest.json"),
+    JSON.stringify(manifest, null, 2),
+  );
 
   console.log(`${OUT_DIR}/ 에 ${written.length}개 생성:`);
   for (const name of written) console.log(`  - ${name}`);

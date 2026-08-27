@@ -220,6 +220,7 @@ gh pr create -B develop --title "<제목>" --body-file <파일>
 UI 변경 PR에는 이미지 첨부가 필수지만(`.github/pull_request_template.md`), **직접 첨부할 필요는 없습니다.** 브랜치를 푸시하면 `.github/workflows/pr-screenshots.yml`이 `scripts/shots.mjs`(Playwright)를 돌려 캡처하고, 이미지를 `pr-assets` orphan 브랜치에 올린 뒤 sticky 코멘트로 임베드합니다. PR이 닫히면 해당 디렉터리는 자동 정리됩니다.
 
 - **새 화면을 캡처 대상에 넣으려면** `scripts/shots.mjs`의 `SCENARIOS` 배열에 항목을 추가합니다 (`name`·`path`·`viewport`·`clip`·`hover`·`scrollGif`). 캡처 로직은 건드리지 않습니다.
+- **코멘트에 어떻게 실릴지도 같은 배열에서 정합니다** (`group`·`label`·`caption`·`width`). 본문은 `.shots/manifest.json`을 읽어 `scripts/shots-comment.mjs`가 생성하므로, 시나리오만 추가하면 코멘트에도 따라옵니다.
 - 뷰포트는 `VIEWPORTS` 맵에 이름을 붙여두고 시나리오에서 키로 참조합니다.
 - 인터랙션은 mp4가 아니라 **GIF**로 뽑습니다 — 마크다운 `![]()`는 이미지만 렌더링하기 때문입니다.
 - 시나리오가 늘어 파일이 무거워지면 슬라이스별 `*.shots.mjs`로 쪼개되, 그건 **두 번째 소비자가 생겼을 때** 합니다 (`shared` 승격 원칙과 같은 판단).

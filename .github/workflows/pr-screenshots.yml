@@ -8,6 +8,7 @@ on:
     paths:
       - "src/**"
       - "scripts/shots.mjs"
+      - "scripts/shots-comment.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/pr-screenshots.yml"
@@ -117,20 +118,9 @@ jobs:
           set -euo pipefail
           RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${ASSET_BRANCH}/${DEST}"
 
-          cat > comment.md <<EOF
-          <!-- shots-bot -->
-          ## 📸 스크린샷
-
-          <sub>\`${SHORT}\` 기준 · 자동 생성 · 푸시할 때마다 이 코멘트가 갱신됩니다</sub>
-
-          | 기본 | Hover |
-          | --- | --- |
-          | <img src="${RAW}/sidebar-default.png" width="240"> | <img src="${RAW}/sidebar-hover.png" width="240"> |
-
-          **메뉴 영역 내부 스크롤** — 로고는 고정되고 메뉴만 스크롤됩니다
-
-          <img src="${RAW}/sidebar-scroll.gif" width="240">
-          EOF
+          # 본문은 `.shots/manifest.json`(= SCENARIOS)에서 생성한다.
+          # 여기에 파일명을 적어두면 시나리오를 추가해도 코멘트에 나타나지 않는다.
+          node scripts/shots-comment.mjs "$RAW" "$SHORT" > comment.md
 
           # 마커로 기존 코멘트를 찾아 수정한다. 없으면 새로 만든다.
           # `| head -1`을 쓰면 gh가 SIGPIPE로 죽어 pipefail에 걸리므로 jq 안에서 first를 쓴다.
