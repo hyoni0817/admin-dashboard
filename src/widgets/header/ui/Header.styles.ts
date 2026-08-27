@@ -107,8 +107,8 @@ export const Badge = styled.span`
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: ${theme.colors.notification.badge};
-  box-shadow: 0 0 0 1px ${theme.colors.notification.badge}1a;
+  background: ${theme.colors.rose.rose500};
+  box-shadow: 0 0 0 1px ${theme.colors.rose.rose500}1a;
   font-family: var(--font-nunito-sans);
   font-weight: 700;
   font-size: 12px;
