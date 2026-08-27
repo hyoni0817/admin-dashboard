@@ -45,6 +45,7 @@ const VIEWPORTS = {
  * glob으로 모으는 방식이 다음 단계다. 지금은 소비자가 하나뿐이라 여기 둔다.
  */
 const SCENARIOS = [
+  { name: "header-default", viewport: "still", clip: "header" },
   { name: "sidebar-default", viewport: "still", clip: "aside" },
   {
     name: "sidebar-hover",
